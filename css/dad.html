@@ -1,0 +1,182 @@
+
+<div></div>
+<script>
+    // SETUP
+
+    var win = window,
+        doc = document,
+        body = doc.body;
+
+    var ww = win.innerWidth,
+        wh = win.innerHeight;
+
+    var c = doc.createElement('canvas'),
+        ctx = c.getContext("2d");
+
+    var cx = ww/2,
+        cy = wh/2;
+
+    c.width = ww;
+    c.height = wh;
+
+    body.appendChild(c);
+    body.style.overflow = 'hidden';
+
+
+
+    win.addEventListener('resize', function(){
+        ww = win.innerWidth;
+        wh = win.innerHeight;
+        c.width = ww;
+        c.height = wh;
+        cx = ww/2;
+        cy = wh/2;
+    });
+    // =======================================
+
+
+    // SETTINGS
+
+    var cfg = {
+        count: 80,
+        size: 2,
+        bg: 'rgba(5,5,5, 0.2)',
+        colors: {
+            red: '#BE4657',
+            white: '#fff',
+            green: '#17987A'
+        }
+    };
+    // =======================================
+
+
+    // UTILS
+
+    function rand(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function isOOB(p) {
+        if (p.x+p.size < 0 || p.x-p.size > ww || p.y+p.size < 0 || p.y-p.size > wh) {
+            return true;
+        }
+    }
+    // =======================================
+
+
+    // PARTICLE
+
+    var particles = [];
+
+    function Particle(i){
+        this.x = rand(0, ww);
+        this.y = rand(0, wh);
+        this.id = i;
+
+        if (i == 0) {
+            this.color = cfg.colors.white;
+            this.size = cfg.size * 2;
+        } else {
+            this.size = cfg.size;
+            this.color = cfg.colors.green;
+        }
+
+        this.vx = Math.random() * 5;
+        this.vy = Math.random() * 5;
+
+        this.angle = rand(3, 10);
+        this.speed = ww / 2000;
+
+        particles.push(this);
+
+        this.update = function(){
+
+            this.x += this.vx;
+            this.y += this.vy;
+
+            this.vx *= 0.95;
+            this.vy *= 0.95;
+
+            this.angle += 0.02;
+
+            if (isOOB(this)) {
+                this.x = rand(0, ww);
+                this.y = rand(0, wh);
+            }
+
+            if (this == particles[0]) {
+
+                if (rand(0, 5) % 2) {
+
+                    this.vx += Math.sin(Math.floor(Math.random() * 10) - 5);
+                    this.vy += Math.sin(Math.floor(Math.random() * 10) - 5);
+
+                } else {
+
+                    this.vx -= Math.sin(Math.floor(Math.random() * 10) - 5);
+                    this.vy -= Math.sin(Math.floor(Math.random() * 10) - 5);
+
+                }
+
+            } else {
+
+                var dx = particles[0].x - this.x,
+                    dy = particles[0].y - this.y;
+
+                var dist = Math.sqrt(dx*dx + dy*dy);
+
+                if(dist <= 200) {
+
+                    this.color = cfg.colors.red;
+
+                    this.vx += dx/800;
+                    this.vy += dy/800;
+
+                } else {
+
+                    this.color = cfg.colors.green;
+
+                    this.vx = Math.random() * 5;
+                    this.vy = Math.random() * 5;
+
+                    this.x += Math.sin((Math.PI * 1) + (this.angle) ) * this.vx;
+                    this.y += Math.cos((Math.PI * 1) + (this.angle) ) * this.vy;
+                }
+
+            }
+
+        };
+
+        this.draw = function(){
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+
+// arc(x, y, radius, startAngle, endAngle, anticlockwise)
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI*2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    // =======================================
+
+
+    // INIT
+
+    for (var i = 0; i <= cfg.count; i++) {
+        new Particle(i);
+    }
+
+    function animate(){
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = cfg.bg;
+        ctx.fillRect(0, 0, ww, wh);
+
+        for (var i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+        }
+
+        requestAnimationFrame(animate);
+    }
+    animate();</script>
+

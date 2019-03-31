@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/dad.html" media="screen" type="text/css" />
+    <title>Title</title>
+    <style>
+            *{
+                margin: 0;
+                padding: 0;
+            }
+            body{
+                background-color: black;
+            }
+            .box {
+            width: 500px;
+            padding: 20px;
+            margin: 100px auto;
+
+        }
+        .bry-box{
+            width: 200px;
+            height: 2px;
+        }
+        .in-box{
+            width: 100%;
+            display: flex;
+        }
+        .in-box img {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+        }
+        .in-box-1{
+            width: 350px;
+            height: 150px;
+        }
+        .singer{
+            margin: 30px 0 0 30px ;
+        }
+        .bry{
+            width: 200px;
+            position: relative;
+            margin: 15px;
+        }
+        .total{
+            width: 200px;
+            height: 2px;
+            background-color: white;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .now{
+            width: 0;
+            height: 2px;
+            background-color: #7d51ee;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .yuan{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #5af57c;
+            position: absolute;
+            top: -3px;
+            left: 0;
+        }
+        .time{
+            position: absolute;
+            top: -11px;
+            right: -113px;
+            background-color: black;
+        }
+        .bth{
+            display: flex;
+            margin: 35px 20px 20px 20px;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bth div{
+            background: url("player@2x.png") no-repeat;
+        }
+            .bth .prev{
+                width: 49px;
+                height: 35px;
+                background-position-y:-61px;
+            }
+            .bth .start{
+                width: 51px;
+                height: 58px;
+            }
+            .bth .next{
+                width: 40px;
+                height: 47px;
+                background-position-y:-100px;
+            }
+            .bth .volume{
+            width: 56px;
+            height: 50px;
+            background-position-y:-283px;
+        }
+        .bth .mode{
+            width: 54px;
+            height: 46px;
+            background-position-y:-409px;
+        }
+        ul{
+            list-style: none;
+        }
+
+        .list-box{
+            width: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            color: gray;
+        }
+            .list-box li{
+                height: 30px;
+                line-height: 30px;
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px dashed gray;
+            }
+            .active{
+                background-color: #5af57c;
+            }
+            iframe{
+                position: relative;
+                top: 30px;
+            }
+        span{
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<iframe  src="css/dad.html"  frameborder =0  width="100%" height="150px" ></iframe>
+<!-- 最外层div-->
+        <div class="box">
+<!--            控制组件-->
+            <div class="in-box">
+                   <img src="16pic_3746337_s.jpg">
+                <div class="in-box-1">
+                    <div class="singer">
+                        <input type="text" id="searchTxt"><button id="searchBth">搜索</button><br>
+                        <span>简易音乐播放器</span>
+                    </div>
+                    <div class="bry">
+                        <div class="bry-box">
+                            <div class="total"></div><!--总进度条-->
+                            <div class="now"></div><!--当前进度条-->
+                            <div class="yuan"></div><!--控制按钮-->
+                        </div>
+                        <p class="time"><span class="current">00:00</span>
+                                    <span>/</span>
+                            <span class="total1">00:00</span>
+                        </p><!--歌曲时长-->
+                    </div>
+<!--                    按钮组件-->
+                    <div class="bth">
+                        <div class="prev"></div><!--上一首-->
+                        <div class="start"></div><!--暂停/播放-->
+                        <div class="next"></div><!--下一首-->
+                        <div class="volume" ></div><!--音量-->
+                        <div class="mode" ></div><!--模式-->
+                    </div>
+
+                </div>
+            </div>
+            <!--音乐列表-->
+            <div class="list-box">
+              <ul></ul>
+            </div>
+
+        </div>
+<audio></audio>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+        <script >
+            //保存歌曲数据
+            var data = [];
+            //获取元素
+            var audio = document.querySelector('audio');
+            var pic = document.querySelector('.in-box img');
+            var singer = document.querySelector('.singer span');
+            var start = document.querySelector('.bth .start');
+            var prev = document.querySelector('.bth .prev');
+            var next = document.querySelector('.bth .next');
+            var time = document.querySelector('.time span');
+            var currentTime = document.querySelector('.time .current');
+            var totalTime = document.querySelector('.time .total1');
+            var barBox = document.querySelector('.bry-box');
+            var ctrBar = document.querySelector('.bry .yuan');
+            var ctrNow = document.querySelector('.bry .now');
+            var modeBtr = document.querySelector('.mode');
+            var listBox= document.querySelector('.list-box  ul');
+            var volume = document.querySelector('.bth .volume');
+            var searchTxt = document.querySelector('#searchTxt');
+            var searchBth = document.querySelector('#searchBth');
+            var lis = null;
+
+
+            //搜索请求ajax
+            searchBth.addEventListener('click',function () {
+                    $.ajax({
+                        url:'https://api.imjad.cn/cloudmusic/',
+                        data :{
+                            type:'search',
+                            s:searchTxt.value
+                        },
+                        type:'get',
+                        success : function (data1) {
+                            data = data1.result.songs;
+                            var str = '';
+                            for (var i = 0 ;i < data.length;i++ ){
+                                str += '<li><span>'+ data[i].name+'</span><span>';
+                                for(var j = 0; j<data[i].ar.length;j++){
+                                    str += data[i].ar[j].name + '';
+                                }
+                                str += '</sapn></li>';
+                            }
+                            listBox.innerHTML = str;
+                            //获取所有的li
+                             lis = document.querySelectorAll('li');
+                        },
+                        error :function (err) {
+                            console.log(err);
+                        }
+                    })
+            });
+
+
+            //标识当前歌曲
+            var index = 0;
+            //旋转角度
+            var rotateDeg = 0;
+            //保存定时器
+            var timer = null;
+            //音量值
+            volume.addEventListener('click',function () {
+                if(audio.paused){
+                    this.style.backgroundPositionY = -283 + 'px';
+                    play();
+                }else{
+                    audio.pause();
+                    this.style.backgroundPositionY = -360 + 'px';
+                }
+            });
+            //标识当前播放模式 0代表顺序播放  1 代表单曲 2 代表随机
+            var mode = 0;
+            //保存图片positionY轴的值
+            var modeArr = [-409,-465,-144];
+            modeBtr.addEventListener('click',function () {
+                mode = ++mode > modeArr.length-1 ? 0: mode;
+                modeBtr.style.backgroundPositionY = modeArr[mode] + 'px';
+            });
+            //播放点击事件
+            $('.list-box ul').on('click','li',function () {
+                index=$(this).index();
+                audio.src = 'http://music.163.com/song/media/outer/url?id='+data[index].id+'.mp3';
+                play();
+                init();
+            });
+            //创建一个初始化数据
+            function init() {
+                //初始化歌曲数据
+                var  songStr = '';
+                for(var i = 0; i<data[index].ar.length;i++){
+                    songStr += data[index].ar[i].name + '  ';
+                }
+                singer.innerHTML = data[index].name + '----'+songStr;
+            //切换列表选中项
+                for(var j = 0 ; j<data.length;j++){
+                    lis[j].className = '';
+                }
+                lis[index].className = 'active';
+            }
+
+            //播放方法
+        function play(){
+           pic.src = data[index].al.picUrl;
+              audio.play();
+            //播放按钮变成暂停按钮
+            start.style.backgroundPositionX = -60 + 'px';
+            clearInterval(timer);
+            //专辑封面旋转
+            timer = setInterval(function () {
+                rotateDeg++;
+                pic.style.transform = 'rotate('+rotateDeg+'deg)';
+            },30);
+        }
+        //播放
+            start.addEventListener('click', function () {
+                if(audio.paused){
+                   play();
+                }else{
+                    //暂停音乐
+                    audio.pause();
+                    //暂停按钮变成播放
+                    this.style.backgroundPositionX = 0+ 'px';
+                    //清除定时器
+                    clearInterval(timer);
+                }
+            });
+            //上一曲的方法
+            prev.addEventListener('click',function () {
+                index--;
+                index = index < 0 ? data.length-1 : 0;
+                audio.src = 'http://music.163.com/song/media/outer/url?id='+data[index].id+'.mp3';
+                init();
+                play();
+            });
+            //下一曲的方法
+            next.addEventListener('click',function () {
+                index = ++index > data.length-1 ? index = 0 :index;
+                audio.src = 'http://music.163.com/song/media/outer/url?id='+data[index].id+'.mp3';
+                init();
+                play();
+            });
+            //获取歌曲时长
+            audio.addEventListener('canplay',function () {
+                var min = parseInt(audio.duration/60);
+                var se = parseInt(audio.duration%60);
+                totalTime.innerHTML =  formatTime(min) + ':'+ formatTime(se);
+
+                audio.addEventListener('timeupdate',function () {
+                    var currentMin = parseInt(audio.currentTime / 60);
+                    var currentSe = parseInt(audio.currentTime % 60);
+                    currentTime.innerHTML = formatTime(currentMin) + ':' + formatTime(currentSe);
+                    var left= audio.currentTime / audio.duration * barBox .clientWidth;
+                    ctrBar.style.left = left + 'px';
+                    ctrNow.style.width =left + 'px';
+                    if(audio.ended){
+                        switch (mode) {
+                            case 0:
+                                index = ++index > data.length-1 ? 0 :index;
+                                audio.src = 'http://music.163.com/song/media/outer/url?id='+data[index].id+'.mp3';
+                                init();
+                                play();
+                                break;
+                            case 1:
+                                init();
+                                play();
+                                break;
+                            case 2:
+                                //递归算法
+                              function getRandom() {
+                                var randomNum = Math.floor(Math.random() * data.length);
+                                if(randomNum === index ){
+                                    randomNum=getRandom();
+                                }
+                                return randomNum;
+                              }
+                              index =  getRandom();
+                                init();
+                                play();
+                                break;
+                        }
+                    }
+                });
+                    //鼠标点击位置
+                    barBox.addEventListener('click',function (e) {
+                        //当前鼠标点击的位置/总宽度*音乐总时长=当前音乐播放的位置
+                        audio.currentTime =  audio.currentTime = e.offsetX / barBox .clientWidth * audio.duration;
+                    })
+            });
+            //格式化时间
+            function formatTime(time) {
+                return time > 9 ? time :'0' + time;
+            }
+
+
+
+            //鼠标及网页出现爱心特效
+            (function(window,document,undefined){
+                var hearts = [];
+                window.requestAnimationFrame = (function(){
+                    return window.requestAnimationFrame ||
+                        window.webkitRequestAnimationFrame ||
+                        window.mozRequestAnimationFrame ||
+                        window.oRequestAnimationFrame ||
+                        window.msRequestAnimationFrame ||
+                        function (callback){
+                            setTimeout(callback,1000/60);
+                        }
+                })();
+                init();
+                function init(){
+                    css(".heart{width: 10px;height: 10px;position: fixed;background: #f00;transform: rotate(45deg);-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);}.heart:after,.heart:before{content: '';width: inherit;height: inherit;background: inherit;border-radius: 50%;-webkit-border-radius: 50%;-moz-border-radius: 50%;position: absolute;}.heart:after{top: -5px;}.heart:before{left: -5px;}");
+                    attachEvent();
+                    gameloop();
+                }
+                function gameloop(){
+                    for(var i=0;i<hearts.length;i++){
+                        if(hearts[i].alpha <=0){
+                            document.body.removeChild(hearts[i].el);
+                            hearts.splice(i,1);
+                            continue;
+                        }
+                        hearts[i].y--;
+                        hearts[i].scale += 0.004;
+                        hearts[i].alpha -= 0.013;
+                        hearts[i].el.style.cssText = "left:"+hearts[i].x+"px;top:"+hearts[i].y+"px;opacity:"+hearts[i].alpha+";transform:scale("+hearts[i].scale+","+hearts[i].scale+") rotate(45deg);background:"+hearts[i].color;
+                    }
+                    requestAnimationFrame(gameloop);
+                }
+                function attachEvent(){
+                    var old = typeof window.onclick==="function" && window.onclick;
+                    window.onclick = function(event){
+                        old && old();
+                        createHeart(event);
+                    }
+                }
+                function createHeart(event){
+                    var d = document.createElement("div");
+                    d.className = "heart";
+                    hearts.push({
+                        el : d,
+                        x : event.clientX - 5,
+                        y : event.clientY - 5,
+                        scale : 1,
+                        alpha : 1,
+                        color : randomColor()
+                    });
+                    document.body.appendChild(d);
+                }
+                function css(css){
+                    var style = document.createElement("style");
+                    style.type="text/css";
+                    try{
+                        style.appendChild(document.createTextNode(css));
+                    }catch(ex){
+                        style.styleSheet.cssText = css;
+                    }
+                    document.getElementsByTagName('head')[0].appendChild(style);
+                }
+                function randomColor(){
+                    return "rgb("+(~~(Math.random()*255))+","+(~~(Math.random()*255))+","+(~~(Math.random()*255))+")";
+                }
+            })(window,document);
+        </script>
+</body>
+</html>
